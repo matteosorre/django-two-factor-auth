@@ -31,7 +31,7 @@ from two_factor.utils import totp_digits
 
 from ..forms import (
     AuthenticationTokenForm, BackupTokenForm, DeviceValidationForm, MethodForm,
-    PhoneNumberForm, PhoneNumberMethodForm, TOTPDeviceForm, YubiKeyDeviceForm,
+    PhoneNumberForm, PhoneNumberMethodForm, TOTPDeviceForm, YubiKeyDeviceForm, LoginForm,
 )
 from ..models import PhoneDevice, get_available_phone_methods
 from ..utils import backup_phones, default_device, get_otpauth_url
@@ -44,7 +44,6 @@ except ImportError:
 
 
 logger = logging.getLogger(__name__)
-
 
 @class_view_decorator(sensitive_post_parameters())
 @class_view_decorator(never_cache)
@@ -61,7 +60,7 @@ class LoginView(IdempotentSessionWizardView):
     """
     template_name = 'two_factor/core/login.html'
     form_list = (
-        ('auth', AuthenticationForm),
+        ('auth', LoginForm),
         ('token', AuthenticationTokenForm),
         ('backup', BackupTokenForm),
     )
@@ -113,6 +112,7 @@ class LoginView(IdempotentSessionWizardView):
         if device:
             signals.user_verified.send(sender=__name__, request=self.request,
                                        user=self.get_user(), device=device)
+
         return redirect(redirect_to)
 
     def get_form_kwargs(self, step=None):

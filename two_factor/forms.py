@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 from django_otp.forms import OTPAuthenticationFormMixin
 from django_otp.oath import totp
 from django_otp.plugins.otp_totp.models import TOTPDevice
+from django.contrib.auth.forms import AuthenticationForm
 
 from .models import (
     PhoneDevice, get_available_methods, get_available_phone_methods,
@@ -18,6 +19,15 @@ try:
     from otp_yubikey.models import RemoteYubikeyDevice, YubikeyDevice
 except ImportError:
     RemoteYubikeyDevice = YubikeyDevice = None
+
+
+
+class LoginForm(AuthenticationForm):
+    username = forms.CharField(widget=forms.TextInput(attrs={'class':'form-control'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'form-control'}))
+
+    def __init__(self, *args, **kwargs):
+        super(LoginForm, self).__init__(*args, **kwargs)
 
 
 class MethodForm(forms.Form):
@@ -55,7 +65,7 @@ class PhoneNumberForm(ModelForm):
 
 
 class DeviceValidationForm(forms.Form):
-    token = forms.IntegerField(label=_("Token"), min_value=1, max_value=int('9' * totp_digits()))
+    token = forms.IntegerField(label=_("Token"), min_value=1, max_value=int('9' * totp_digits()), widget=forms.TextInput(attrs={'type':'number', 'class':'form-control'}))
 
     error_messages = {
         'invalid_token': _('Entered token is not valid.'),
@@ -85,7 +95,7 @@ class YubiKeyDeviceForm(DeviceValidationForm):
 
 
 class TOTPDeviceForm(forms.Form):
-    token = forms.IntegerField(label=_("Token"), min_value=0, max_value=int('9' * totp_digits()))
+    token = forms.IntegerField(label=_("Token"), min_value=0, max_value=int('9' * totp_digits()), widget=forms.TextInput(attrs={'type':'number', 'class':'form-control'}))
 
     error_messages = {
         'invalid_token': _('Entered token is not valid.'),
@@ -140,7 +150,8 @@ class DisableForm(forms.Form):
 
 class AuthenticationTokenForm(OTPAuthenticationFormMixin, Form):
     otp_token = forms.IntegerField(label=_("Token"), min_value=1,
-                                   max_value=int('9' * totp_digits()))
+                                   max_value=int('9' * totp_digits()),
+                                   widget=forms.TextInput(attrs={'type':'number', 'class':'form-control'}))
 
     otp_token.widget.attrs.update({'autofocus': 'autofocus'})
 
